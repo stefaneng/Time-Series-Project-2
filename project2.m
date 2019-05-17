@@ -12,14 +12,16 @@ log_rtns_m = log_rtns - mean(log_rtns);
 
 % Plot the autocorrelation and partial autocorrelation
 figure;
-subplot(2,1,1);
+% subplot(2,1,1);
 autocorr(log_rtns_m);
-subplot(2,1,2);
+saveas(gcf,'plots/acf_log_rtns.png');
+% subplot(2,1,2);
 
 % Ljung-box test
 [h,pValue] = lbqtest(log_rtns_m, 'lags', 20);
 % Fail to reject null hypothesis that log returns come from IIDN
 parcorr(log_rtns_m);
+saveas(gcf,'plots/pacf_log_rtns.png');
 
 % TODO: Do you think the returns can/should be modeled as white noise? 
 % TODO: Anything that suggests that a GARCH model could be a good idea?
@@ -45,7 +47,7 @@ end
 
 flatLogL = reshape(logL, [1, 100]);
 flatNumParams = reshape(numParams, [1, 100]);
-[aic,bic] = aicbic(flatLogL,flatNumParams,n);
+[~,bic] = aicbic(flatLogL,flatNumParams,n);
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models
 figure;
@@ -56,6 +58,7 @@ colorbar;
 title('BIC for GARCH(p,q) models');
 xlabel('P');
 ylabel('Q');
+saveas(gcf,'plots/bic_heatmap_norm.png');
 
 % The minimum value is 1, which corresponds to GARCH(1,1)
 [~, min_bic_idx] = min(bic, [], 'all', 'linear');
@@ -88,6 +91,7 @@ autocorr(res.^2);
 title('Residual^2 Sample ACF');
 %parcorr(res);
 % title('Residual Sample PACF');
+saveas(gcf,'plots/residual_plots_norm.png');
 
 % If the model is correct the distribution of the residual should be normal
 % What about the covariance structure (is this why we do Residual^2?
@@ -111,7 +115,7 @@ end
 
 flatLogL = reshape(logL, [1, 100]);
 flatNumParams = reshape(numParams, [1, 100]);
-[aic,bic] = aicbic(flatLogL,flatNumParams,n);
+[~,bic] = aicbic(flatLogL,flatNumParams,n);
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models with
 %  student's t distribution
@@ -123,6 +127,7 @@ colorbar;
 title('BIC for GARCH(p,q) models');
 xlabel('P');
 ylabel('Q');
+saveas(gcf,'plots/bic_heatmap_t.png');
 
 [~, min_bic_idx_t] = min(bic, [], 'all', 'linear');
 [t_min_p, t_min_q] = ind2sub([10,10], min_bic_idx_t);
@@ -152,6 +157,7 @@ title('Residual Sample ACF');
 subplot(2,2,4);
 autocorr(res.^2);
 title('Residual^2 Sample ACF');
+saveas(gcf,'plots/residual_plots_t.png');
 
 %% Problem 5
 
