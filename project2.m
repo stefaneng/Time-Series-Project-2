@@ -60,7 +60,7 @@ ylabel('Q');
 % The minimum value is 1, which corresponds to GARCH(1,1)
 [~, min_bic_idx] = min(bic, [], 'all', 'linear');
 % Get the min p and q
-[min_p, min_q] = ind2sub([10,10], min_bic_idx];
+[min_p, min_q] = ind2sub([10,10], min_bic_idx);
 
 %% Problem 3 
 % GARCH(1,1)
