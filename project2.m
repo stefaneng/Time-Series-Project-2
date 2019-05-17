@@ -20,6 +20,7 @@ saveas(gcf,'plots/acf_log_rtns.png');
 % Ljung-box test
 [h,pValue] = lbqtest(log_rtns_m, 'lags', 20);
 % Fail to reject null hypothesis that log returns come from IIDN
+figure;
 parcorr(log_rtns_m);
 saveas(gcf,'plots/pacf_log_rtns.png');
 
@@ -115,13 +116,13 @@ end
 
 flatLogL = reshape(logL, [1, 100]);
 flatNumParams = reshape(numParams, [1, 100]);
-[~,bic] = aicbic(flatLogL,flatNumParams,n);
+[~,t_bic] = aicbic(flatLogL,flatNumParams,n);
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models with
 %  student's t distribution
 figure;
 colormap('jet');
-imagesc(reshape(bic, [10,10]));
+imagesc(reshape(t_bic, [10,10]));
 set(gca,'YDir','normal') ;
 colorbar;
 title('BIC for GARCH(p,q) models');
@@ -159,7 +160,20 @@ autocorr(res.^2);
 title('Residual^2 Sample ACF');
 saveas(gcf,'plots/residual_plots_t.png');
 
+
+
 %% Problem 5
+
+%% Testing other models
+% GJR(1,1) performs better according to BIC
+% https://se.mathworks.com/help/econ/specify-gjr-models-using-gjr.html
+gjr_mdl = gjr(1,1);
+[gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training);
+
+gjr_params = sum(any(gjr_estParam));
+[~,gjr_bic] = aicbic(gjr_logL,gjr_params,n);
+
+% sum(gjr_bic > t_bic);
 
 %% Other
 % Simulate some data to see if it looks like our data
