@@ -24,6 +24,12 @@ figure;
 parcorr(log_rtns_m);
 saveas(gcf,'plots/pacf_log_rtns.png');
 
+% Plot the autocorrelation of the squared returns
+figure;
+autocorr(log_rtns_m.^2);
+title("Sample Squared Returns Autocorrelation");
+saveas(gcf, 'plots/acf_square_rtns.png');
+
 % TODO: Do you think the returns can/should be modeled as white noise? 
 % TODO: Anything that suggests that a GARCH model could be a good idea?
 
@@ -167,8 +173,10 @@ saveas(gcf,'plots/residual_plots_t.png');
 %% Testing other models
 % GJR(1,1) performs better according to BIC
 % https://se.mathworks.com/help/econ/specify-gjr-models-using-gjr.html
+% https://se.mathworks.com/help/econ/compare-garch-and-egarch-fits.html
+% Can do a likelihood ratio test: The GARCH(1,1) is nested in the GJR(1,1) model, however, so you could use a likelihood ratio test to compare these models.
 gjr_mdl = gjr(1,1);
-[gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training);
+[gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training, 'Display', 'off');
 
 gjr_params = sum(any(gjr_estParam));
 [~,gjr_bic] = aicbic(gjr_logL,gjr_params,n);

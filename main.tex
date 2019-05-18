@@ -29,6 +29,12 @@ top=1in
 
 \section*{Problem 1}
 
+We computed the log returns $X_t = \log(P_t) - \log(P_{t - 1})$.
+Using Matlab's Ljung-Box test \textit{lbqtest} with a lag $h = 20$, we got a p-value of 0.1331.
+We fail to reject the null hypothesis at the $\alpha = 0.05$ significance level and conclude that the data in consistent with being $iid$.
+In Figure \ref{fig:acf_log_rtns} we plot the autocorrelation function for the log returns.
+
+
 \begin{figure}[H]
 \includegraphics[width=10cm]{plots/acf_log_rtns.png}
 \centering
@@ -43,7 +49,23 @@ top=1in
 \label{fig:pacf_log_rtns}
 \end{figure}
 
+\begin{figure}[H]
+\includegraphics[width=10cm]{plots/acf_square_rtns.png}
+\centering
+\caption{Autocorrelation function for the squared log returns}
+\label{fig:acf_square_rtns}
+\end{figure}
+
 \section*{Problem 2}
+
+We split the data into a training set with the first 1000 values and a test set with the remaining data (251 values).
+We fit a GARCH(p,q) model with Gaussian errors for each $p = 1, \ldots, 10$ and $q = 1, \ldots, 10$, resulting in 100 different models.
+For each of these models we computed the BIC (Bayesian information criteria) and plotted the result in the heatmap shown in Figure \ref{fig:bic_heatmap_norm}.
+The minimum model was the GARCH(1,1) model
+\begin{align*}
+X_t &= \sigma_t Z_t && Z_t \sim IIDN(0, 1)\\
+\sigma_t^2 &= \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
+\end{align*}
 
 \begin{figure}[H]
 \includegraphics[width=10cm]{plots/bic_heatmap_norm.png}
@@ -54,8 +76,20 @@ top=1in
 
 \section*{Problem 3}
 
+Using the GARCH(1,1) model, we plotted the residuals (Figure \ref{fig:residual_plots_norm}), QQ plot of the residuals versus standard normal, autocorrelation of residuals, and the autocorrelation of the squared residuals.
+The residuals were computed by infering $\hat{\sigma_t}^2$, then dividing the training data by the square root of the infered values, $\hat{\sigma}$.
+We would expect these values,
+$$
+\frac{X_t}{\hat{\sigma}} = Z_t \sim IID(0,1)
+$$
+Thus, the distribution of the residuals should the residuals should follow a standard normal distribution.
+We see that in the QQ plot there is some deviation from the standard normal.
+We have heavier tails than we would expect with a standard normal.
+The autocorrelation of the sample ACF has almost all of the values within $\pm 1.96 / \sqrt{n}$.
+Similarly, the residuals squared also appear to be iid normal as all of the acf values are within $\pm 1.96 / \sqrt{n}$.
+
 \begin{figure}[H]
-\includegraphics[width=10cm]{plots/residual_plots_norm.png}
+\includegraphics[width=16cm]{plots/residual_plots_norm.png}
 \centering
 \caption{Residual Plots for GARCH(1,1) process with Gaussian noise}
 \label{fig:residual_plots_norm}
@@ -71,7 +105,7 @@ top=1in
 \end{figure}
 
 \begin{figure}[H]
-\includegraphics[width=10cm]{plots/residual_plots_t.png}
+\includegraphics[width=16cm]{plots/residual_plots_t.png}
 \centering
 \caption{Residual Plots for GARCH(1,1) process with Student's t distribution noise}
 \label{fig:residual_plots_norm}
@@ -79,7 +113,7 @@ top=1in
 
 \begin{appendices}
 
-\subsection{project1.m}
+\subsection{project2.m}
 \lstinputlisting[language=Octave]{project2.m}
 
 \end{appendices}
