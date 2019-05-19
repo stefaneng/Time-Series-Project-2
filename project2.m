@@ -78,8 +78,6 @@ mdl = garch('GARCHLags', 1,'ARCHLags',1);
 estMdl = estimate(mdl, training); 
 
 v = infer(estMdl, training);
-% Plot estimated conditional variances 
-% plot(v);
 
 res = training ./ sqrt(v);
 
@@ -170,6 +168,43 @@ saveas(gcf,'plots/residual_plots_t.png');
 
 
 %% Problem 5
+% Compute the inverse cdf values for norm and t-distribution using
+% estimated degrees of freedom from the model.
+alpha = 0.05;
+z_05 = norminv(1 - alpha / 2);
+t_05 = tinv(1 - alpha  / 2, tEstMdl.Distribution.DoF);
+
+
+norm_forecasts = zeros(length(test),1);
+t_forecasts = zeros(length(test), 1);
+simple_forecasts = zeros(length(test), 1);
+
+for i = 1:length(test)    
+    % Use all of the data up until the prediction for each forecast    
+    norm_forecasts(i) = forecast(estMdl, 1, log_rtns_m(1:(1000 + i)));
+    t_forecasts(i) = forecast(tEstMdl, 1, log_rtns_m(1:(1000 + i)));
+    simple_forecasts(i) = var(log_rtns_m(1:(1000 + i)));
+end
+
+norm_ci = z_05 .* sqrt(norm_forecasts);
+t_ci = t_05 .* sqrt(t_forecasts);
+simple_ci = z_05 .* sqrt(simple_forecasts);
+
+% Plot CIs as lines
+% Overlay all the CIs on the same plot
+figure;
+p_d = plot(test_x, test, 'Color', [.7,.7,.7]);
+xlim(xl);
+hold on;
+p_n = plot(test_x, norm_ci, 'r');
+plot(test_x, - norm_ci, 'r');
+p_t = plot(test_x, t_ci, 'b');
+plot(test_x, - t_ci, 'b');
+p_s = plot(test_x, simple_ci, 'black:', 'LineWidth',2);
+plot(test_x, - simple_ci, 'black:', 'LineWidth',2);
+legend([p_d, p_n, p_t, p_s] , 'Data', 'Normal', 'T', 'Simple');
+title("Confidence intervals for the three models");
+saveas(gcf,'plots/conf_ints_overlay.png');
 
 %% Testing other models
 % GJR(1,1) performs better according to BIC
@@ -181,21 +216,3 @@ gjr_mdl = gjr(1,1);
 
 gjr_params = sum(any(gjr_estParam));
 [~,gjr_bic] = aicbic(gjr_logL,gjr_params,n);
-
-% sum(gjr_bic > t_bic);
-
-%% Other
-% Simulate some data to see if it looks like our data
-% [vS,yS] = simulate(estMdl,length(training));
-
-% vf = forecast(estMdl, length(test), training);
-
-% Predict 
-%[V, logL] = infer(estMdl, test);
-
-%figure;
-%plot(1:1000, training);
-%hold on;
-%plot(1001:1251, vf, 'r');
-%plot(1001:1251, sqrt(V), 'r');
-%plot(1001:1251, test, ':');

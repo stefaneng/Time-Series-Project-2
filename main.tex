@@ -76,7 +76,12 @@ X_t &= \sigma_t Z_t && Z_t \sim IIDN(0, 1)\\
 
 \section*{Problem 3}
 
-Using the GARCH(1,1) model, we plotted the residuals (Figure \ref{fig:residual_plots_norm}), QQ plot of the residuals versus standard normal, autocorrelation of residuals, and the autocorrelation of the squared residuals.
+Using the GARCH(1,1) model, we computed the residuals:
+$$
+\hat{R}_t = (X_t - \hat{X_t})/\sqrt{\sigma_t}
+$$
+and for a GARCH process, $\hat{X}_t = 0$ for all $t \in \mathbb Z$.
+We then plotted the residuals (Figure \ref{fig:residual_plots_norm}), QQ plot of the residuals versus standard normal, autocorrelation of residuals, and the autocorrelation of the squared residuals.
 The residuals were computed by infering $\hat{\sigma_t}^2$, then dividing the training data by the square root of the infered values, $\hat{\sigma}$.
 We would expect these values,
 $$
@@ -101,7 +106,7 @@ Based on the QQ-plot, it makes sense to investigate whether a Student's t distri
 Now we have the model
 
 \begin{align*}
-X_t &= \sigma_t Z_t && Z_t \sim IID-t(0, 1)\\
+X_t &= \sigma_t Z_t && Z_t \sim IIDt(0, 1)\\
 \sigma_t^2 &= \alpha_0 + \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
 \end{align*}
 
@@ -115,18 +120,40 @@ The model was estimated with degrees of freedom equal to 8.03.
 \includegraphics[width=10cm]{plots/bic_heatmap_t.png}
 \centering
 \caption{BIC Heatmap for GARCH(p,q) process with Student's t distribution noise}
-\label{fig:bic_heatmap_norm}
+\label{fig:bic_heatmap_t}
 \end{figure}
 
 \begin{figure}[H]
 \includegraphics[width=16cm]{plots/residual_plots_t.png}
 \centering
 \caption{Residual Plots for GARCH(1,1) process with Student's t distribution noise}
-\label{fig:residual_plots_norm}
+\label{fig:residual_plots_t}
 \end{figure}
 
 \section*{Problem 5}
+The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1})$ which using the normal errors,
+and the distribution is a student's t distribution $t(0, \sigma_{t + 1})$,
+where we estimate $\sigma_{t + 1}$ using
+$$
+\hat{\sigma}_{t + 1} = \hat{\alpha}_0 + \hat{\alpha}_1 X_t^2 + \hat{\beta}_1 \hat{\sigma}_t
+$$
+This results in confidences intervals
+\begin{align*}
+&\pm z_{\alpha/2} \cdot \sigma_{t + 1}\\
+&\pm t_{\alpha/2, \nu} \cdot \sigma_{t + 1}
+\end{align*}
+Since we have $\mu = 0$ for $X_{t + 1}$.
 
+We computed the confidence intervals for each $t = 1001,\ldots, 1251$ for both the normal model as well as the t distribution model.
+At each step, we used the \textit{forecast} function in matlab and supplied all of the previous values in the log returns $X_t = \log(P_t) - \log(P_{t - 1})$ as the presample innovations.
+Also, we computed the simple model which was just the sample variance of the the previous time steps, $X_1, \ldots, X_t$.
+
+\begin{figure}[H]
+\includegraphics[width=16cm]{plots/conf_ints_overlay.png}
+\centering
+\caption{Confidence intervals (overlayed) for the three models}
+\label{fig:conf_intervals}
+\end{figure}
 
 \begin{appendices}
 
