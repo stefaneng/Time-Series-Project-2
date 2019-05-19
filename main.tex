@@ -64,7 +64,7 @@ For each of these models we computed the BIC (Bayesian information criteria) and
 The minimum model was the GARCH(1,1) model
 \begin{align*}
 X_t &= \sigma_t Z_t && Z_t \sim IIDN(0, 1)\\
-\sigma_t^2 &= \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
+\sigma_t^2 &= \alpha_0 + \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
 \end{align*}
 
 \begin{figure}[H]
@@ -87,6 +87,7 @@ We see that in the QQ plot there is some deviation from the standard normal.
 We have heavier tails than we would expect with a standard normal.
 The autocorrelation of the sample ACF has almost all of the values within $\pm 1.96 / \sqrt{n}$.
 Similarly, the residuals squared also appear to be iid normal as all of the acf values are within $\pm 1.96 / \sqrt{n}$.
+Based on the QQ-plot, it makes sense to investigate whether a Student's t distribution, which allows for heavier tails, would fit the data better.
 
 \begin{figure}[H]
 \includegraphics[width=16cm]{plots/residual_plots_norm.png}
@@ -96,6 +97,19 @@ Similarly, the residuals squared also appear to be iid normal as all of the acf 
 \end{figure}
 
 \section*{Problem 4}
+
+Now we have the model
+
+\begin{align*}
+X_t &= \sigma_t Z_t && Z_t \sim IID-t(0, 1)\\
+\sigma_t^2 &= \alpha_0 + \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
+\end{align*}
+
+Where $IID-t(0,1)$ is indepedent and identically distributed Student's t distribution with some degrees of freedom $\nu$.
+Again we find that the GARCH(1,1) model has the minimum BIC.
+The ACF of the residuals and square residuals are consistent with iid noise as in the previous problem.
+A big difference is the QQ plot which now fits almost exactly.
+The model was estimated with degrees of freedom equal to 8.03.
 
 \begin{figure}[H]
 \includegraphics[width=10cm]{plots/bic_heatmap_t.png}
@@ -110,6 +124,9 @@ Similarly, the residuals squared also appear to be iid normal as all of the acf 
 \caption{Residual Plots for GARCH(1,1) process with Student's t distribution noise}
 \label{fig:residual_plots_norm}
 \end{figure}
+
+\section*{Problem 5}
+
 
 \begin{appendices}
 

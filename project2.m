@@ -89,14 +89,13 @@ plot(res);
 title('Standardized Residuals');
 subplot(2,2,2);
 qqplot(res);
-%title('Residual Histogram');
+title({'QQ Plot of Residuals vs','Standard Normal Distribution'});
 subplot(2,2,3);
 autocorr(res);
 title('Residual Sample ACF');
 subplot(2,2,4);
 autocorr(res.^2);
 title('Residual^2 Sample ACF');
-%parcorr(res);
 % title('Residual Sample PACF');
 saveas(gcf,'plots/residual_plots_norm.png');
 
@@ -158,6 +157,8 @@ subplot(2,2,2);
 % QQ-plot for t distribution with the estimated degrees of freedom
 tdist = makedist('tLocationScale', 'nu', tEstMdl.Distribution.DoF);
 qqplot(res, tdist);
+title({'QQ Plot of Residuals vs',"Student's t Distribution", "(df = " + round(tEstMdl.Distribution.DoF, 2) + ")"});
+xlabel("Quantiles of t distribution");
 subplot(2,2,3);
 autocorr(res);
 title('Residual Sample ACF');
