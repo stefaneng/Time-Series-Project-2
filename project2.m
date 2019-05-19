@@ -206,6 +206,16 @@ legend([p_d, p_n, p_t, p_s] , 'Data', 'Normal', 'T', 'Simple');
 title("Confidence intervals for the three models");
 saveas(gcf,'plots/conf_ints_overlay.png');
 
+% Count the number of times the log returns fall into the CIs
+norm_ci_count = sum(test > -norm_ci & test < norm_ci);
+t_ci_count = sum(test > -t_ci & test < t_ci);
+simple_ci_count = sum(test > -simple_ci & test < simple_ci);
+
+counts = [norm_ci_count, t_ci_count, simple_ci_count];
+counts(2,:) = round(counts(1,:) / 251, 3);
+% Pretty print the table of counts and percentages
+array2table(counts, 'RowNames', {'Count', '%'} ,'VariableNames', {'Normal', 'T', 'Simple'})
+
 %% Testing other models
 % GJR(1,1) performs better according to BIC
 % https://se.mathworks.com/help/econ/specify-gjr-models-using-gjr.html

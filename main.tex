@@ -148,6 +148,15 @@ We computed the confidence intervals for each $t = 1001,\ldots, 1251$ for both t
 At each step, we used the \textit{forecast} function in matlab and supplied all of the previous values in the log returns $X_t = \log(P_t) - \log(P_{t - 1})$ as the presample innovations.
 Also, we computed the simple model which was just the sample variance of the the previous time steps, $X_1, \ldots, X_t$.
 
+\begin{table}[H]
+  \centering
+\begin{tabular}{l | lll}
+& Normal & T & Simple\\ \hline
+counts & 250  & 250 & 246 \\
+percentage & 0.996 & 0.996 & 0.98   \\
+\end{tabular}
+\end{table}
+
 \begin{figure}[H]
 \includegraphics[width=16cm]{plots/conf_ints_overlay.png}
 \centering
