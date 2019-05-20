@@ -18,7 +18,8 @@ saveas(gcf,'plots/acf_log_rtns.png');
 % subplot(2,1,2);
 
 % Ljung-box test
-[h,pValue] = lbqtest(log_rtns_m, 'lags', 20);
+[~, pValue] = lbqtest(log_rtns_m, 'lags', 20);
+fprintf("The p-value from the Ljung-box test is: %.04f\n", pValue);
 % Fail to reject null hypothesis that log returns come from IIDN
 figure;
 parcorr(log_rtns_m);
@@ -30,36 +31,28 @@ autocorr(log_rtns_m.^2);
 title("Sample Squared Returns Autocorrelation");
 saveas(gcf, 'plots/acf_square_rtns.png');
 
-% TODO: Do you think the returns can/should be modeled as white noise? 
-% TODO: Anything that suggests that a GARCH model could be a good idea?
-
 %% Problem 2
 n = length(log_rtns_m);
 training = log_rtns_m(1:1000);
 test = log_rtns_m(1001:end);
 
-logL = zeros(10,10);
-numParams = zeros(10,10);
+normBIC = zeros(10, 10);
 
 for p = 1:10
     for q = 1:10
         % Create the GARCH(p,q) model without an offset
         mdl = garch('GARCHLags', p,'ARCHLags',q);
         % Estimate the model for the training data
-        [~, estParamCov1, logL(p,q)] = estimate(mdl, training, 'Display', 'off'); 
-        % Save the number of non-zero parameters estimated
-        numParams(p,q) = sum(any(estParamCov1));
+        [estMdl, ~, ~] = estimate(mdl, training, 'Display', 'off');        
+        results = estMdl.summarize;
+        normBIC(p,q) = results.BIC;
     end
 end
-
-flatLogL = reshape(logL, [1, 100]);
-flatNumParams = reshape(numParams, [1, 100]);
-[~,bic] = aicbic(flatLogL,flatNumParams,n);
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models
 figure;
 colormap('jet');
-imagesc(reshape(bic, [10,10]));
+imagesc(normBIC);
 set(gca,'YDir','normal') ;
 colorbar;
 title('BIC for GARCH(p,q) models');
@@ -68,17 +61,19 @@ ylabel('Q');
 saveas(gcf,'plots/bic_heatmap_norm.png');
 
 % The minimum value is 1, which corresponds to GARCH(1,1)
-[~, min_bic_idx] = min(bic, [], 'all', 'linear');
+[min_bic, min_bic_idx] = min(normBIC, [], 'all', 'linear');
 % Get the min p and q
 [min_p, min_q] = ind2sub([10,10], min_bic_idx);
+fprintf("Minimum BIC for normal distribution model: %.03f\n", min_bic);
 
 %% Problem 3 
 % GARCH(1,1)
-mdl = garch('GARCHLags', 1,'ARCHLags',1);
-estMdl = estimate(mdl, training); 
+norm_mdl = garch(1,1);
+[norm_est_mdl, ~, norm_logL] = estimate(norm_mdl, training);
 
-v = infer(estMdl, training);
+v = infer(norm_est_mdl, training);
 
+% Compute the residuals
 res = training ./ sqrt(v);
 
 figure;
@@ -94,7 +89,6 @@ title('Residual Sample ACF');
 subplot(2,2,4);
 autocorr(res.^2);
 title('Residual^2 Sample ACF');
-% title('Residual Sample PACF');
 saveas(gcf,'plots/residual_plots_norm.png');
 
 % If the model is correct the distribution of the residual should be normal
@@ -106,26 +100,23 @@ saveas(gcf,'plots/residual_plots_norm.png');
 %% Problem 4
 % Repeat problem 2 & 3 for GARCH(p,q) with Student's t distribution
 
+tBIC = zeros(10, 10);
 for p = 1:10
     for q = 1:10
         % Create the GARCH(p,q) model without an offset
         mdl = garch('GARCHLags', p,'ARCHLags',q,'Distribution','t');
         % Estimate the model for the training data
-        [~, estParamCov1, logL(p,q)] = estimate(mdl, training, 'Display', 'off'); 
-        % Save the number of non-zero parameters estimated
-        numParams(p,q) = sum(any(estParamCov1));
+        [estMdl, ~, ~] = estimate(mdl, training, 'Display', 'off');        
+        results = estMdl.summarize;
+        tBIC(p,q) = results.BIC;
     end
 end
-
-flatLogL = reshape(logL, [1, 100]);
-flatNumParams = reshape(numParams, [1, 100]);
-[~,t_bic] = aicbic(flatLogL,flatNumParams,n);
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models with
 %  student's t distribution
 figure;
 colormap('jet');
-imagesc(reshape(t_bic, [10,10]));
+imagesc(tBIC);
 set(gca,'YDir','normal') ;
 colorbar;
 title('BIC for GARCH(p,q) models');
@@ -133,18 +124,18 @@ xlabel('P');
 ylabel('Q');
 saveas(gcf,'plots/bic_heatmap_t.png');
 
-[~, min_bic_idx_t] = min(bic, [], 'all', 'linear');
+% Get the min index, and convert back to (p,q)
+[min_bic_t, min_bic_idx_t] = min(tBIC, [], 'all', 'linear');
 [t_min_p, t_min_q] = ind2sub([10,10], min_bic_idx_t);
+fprintf("Minimum BIC for t-distribution model: %.03f\n", min_bic_t);
 
-%% Problem 3 
+%% Problem 4
 % GARCH(1,1)
 tMdl = garch('GARCHLags', t_min_p,'ARCHLags', t_min_q, 'Distribution', 't');
 tEstMdl = estimate(tMdl, training); 
 
 v = infer(tEstMdl, training);
-% Plot estimated conditional variances 
-% plot(v);
-
+% Compute the residuals
 res = training ./ sqrt(v);
 
 figure;
@@ -181,7 +172,7 @@ simple_forecasts = zeros(length(test), 1);
 
 for i = 1:length(test)    
     % Use all of the data up until the prediction for each forecast    
-    norm_forecasts(i) = forecast(estMdl, 1, log_rtns_m(1:(1000 + i)));
+    norm_forecasts(i) = forecast(norm_est_mdl, 1, log_rtns_m(1:(1000 + i)));
     t_forecasts(i) = forecast(tEstMdl, 1, log_rtns_m(1:(1000 + i)));
     simple_forecasts(i) = var(log_rtns_m(1:(1000 + i)));
 end
@@ -192,6 +183,8 @@ simple_ci = z_05 .* sqrt(simple_forecasts);
 
 % Plot CIs as lines
 % Overlay all the CIs on the same plot
+test_x = 1000 + (1:length(test));
+xl = [min(test_x), max(test_x)];
 figure;
 p_d = plot(test_x, test, 'Color', [.7,.7,.7]);
 xlim(xl);
@@ -221,8 +214,18 @@ array2table(counts, 'RowNames', {'Count', '%'} ,'VariableNames', {'Normal', 'T',
 % https://se.mathworks.com/help/econ/specify-gjr-models-using-gjr.html
 % https://se.mathworks.com/help/econ/compare-garch-and-egarch-fits.html
 % Can do a likelihood ratio test: The GARCH(1,1) is nested in the GJR(1,1) model, however, so you could use a likelihood ratio test to compare these models.
+% Found that having error with normal distribution performs better than
+% t-distribution for GJR model
 gjr_mdl = gjr(1,1);
-[gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training, 'Display', 'off');
+[gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training);
+gjr_results = gjr_mdl_est.summarize;
+gjr_bic = gjr_results.BIC;
+% Get the min p and q
+fprintf("BIC for GJR model: %.03f\n", gjr_bic);
 
-gjr_params = sum(any(gjr_estParam));
-[~,gjr_bic] = aicbic(gjr_logL,gjr_params,n);
+% Can compare the normal GARCH model and GJR model because they are nested
+% Norm model
+
+% Likelihood ratio test
+% Reject the null hypothesis, and conclude that we need the 
+[h, p] = lratiotest(gjr_logL, norm_logL, 1);

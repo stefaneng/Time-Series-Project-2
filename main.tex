@@ -110,7 +110,7 @@ X_t &= \sigma_t Z_t && Z_t \sim IIDt(0, 1)\\
 \sigma_t^2 &= \alpha_0 + \alpha_1 X_{t - 1}^2 + \beta_1 \sigma_{t - 1}^2
 \end{align*}
 
-Where $IID-t(0,1)$ is indepedent and identically distributed Student's t distribution with some degrees of freedom $\nu$.
+Where $IIDt(0,1)$ is indepedent and identically distributed Student's t distribution with some degrees of freedom $\nu$.
 Again we find that the GARCH(1,1) model has the minimum BIC.
 The ACF of the residuals and square residuals are consistent with iid noise as in the previous problem.
 A big difference is the QQ plot which now fits almost exactly.
@@ -131,7 +131,7 @@ The model was estimated with degrees of freedom equal to 8.03.
 \end{figure}
 
 \section*{Problem 5}
-The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1})$ which using the normal errors,
+The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1})$ when the model has normal error,
 and the distribution is a student's t distribution $t(0, \sigma_{t + 1})$,
 where we estimate $\sigma_{t + 1}$ using
 $$
@@ -148,6 +148,9 @@ We computed the confidence intervals for each $t = 1001,\ldots, 1251$ for both t
 At each step, we used the \textit{forecast} function in matlab and supplied all of the previous values in the log returns $X_t = \log(P_t) - \log(P_{t - 1})$ as the presample innovations.
 Also, we computed the simple model which was just the sample variance of the the previous time steps, $X_1, \ldots, X_t$.
 
+We can see in Table \ref{tab:ci_counts} that in our sample, almost all the other points fell into each of the confidence intervals (larger than 95 percent).
+The plot of the confidence intervals with the points shows us that the bounds are tightest for the normal model, then the t-model and finally the sample variance model.
+
 \begin{table}[H]
   \centering
 \begin{tabular}{l | lll}
@@ -155,6 +158,9 @@ Also, we computed the simple model which was just the sample variance of the the
 counts & 250  & 250 & 246 \\
 percentage & 0.996 & 0.996 & 0.98   \\
 \end{tabular}
+
+\caption{Count of number of time $X_{t+1}$ falls into confidence intervals}
+\label{tab:ci_counts}
 \end{table}
 
 \begin{figure}[H]
@@ -163,6 +169,28 @@ percentage & 0.996 & 0.996 & 0.98   \\
 \caption{Confidence intervals (overlayed) for the three models}
 \label{fig:conf_intervals}
 \end{figure}
+
+\section*{GJR Model}
+
+We used a GJR (Glosten, Jagannathan, and Runkle) \cite{gjr1993} model. model which is
+$$
+X_t = \sigma_t Z_t
+$$
+
+
+The results for the parameter estimates are show in Table \ref{tab:gjr_summary}.
+
+\begin{table}[]
+\begin{tabular}{l}
+Value       StandardError    TStatistic      PValue                      \\
+Constant       1.9808e-06      8.351e-07         2.372        0.017693   \\
+GARCH\{1\}          0.85556       0.017223        49.676               0 \\
+ARCH\{1\}          0.010588       0.013643       0.77608          0.4377 \\
+Leverage\{1\}       0.25399       0.037509        6.7714      1.2755e-11
+\end{tabular}
+\caption{Summary of GJR(1,1) model}
+\label{tab:gjr_summary}
+\end{table}
 
 \begin{appendices}
 
