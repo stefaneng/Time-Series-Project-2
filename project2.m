@@ -4,6 +4,8 @@ n_data = length(data);
 log_data = log(data);
 
 plot(log_data);
+title("Standard & Poor's Europe (Log) Returns");
+saveas(gcf,'plots/returns.png');
 
 %% Problem 1
 log_rtns = diff(log_data);
@@ -11,7 +13,7 @@ log_rtns = diff(log_data);
 log_rtns_m = log_rtns - mean(log_rtns);
 
 % Plot the autocorrelation and partial autocorrelation
-figure;
+clf;
 % subplot(2,1,1);
 autocorr(log_rtns_m);
 saveas(gcf,'plots/acf_log_rtns.png');
@@ -21,12 +23,12 @@ saveas(gcf,'plots/acf_log_rtns.png');
 [~, pValue] = lbqtest(log_rtns_m, 'lags', 20);
 fprintf("The p-value from the Ljung-box test is: %.04f\n", pValue);
 % Fail to reject null hypothesis that log returns come from IIDN
-figure;
+clf;
 parcorr(log_rtns_m);
 saveas(gcf,'plots/pacf_log_rtns.png');
 
 % Plot the autocorrelation of the squared returns
-figure;
+clf;
 autocorr(log_rtns_m.^2);
 title("Sample Squared Returns Autocorrelation");
 saveas(gcf, 'plots/acf_square_rtns.png');
@@ -50,7 +52,7 @@ for p = 1:10
 end
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models
-figure;
+clf;
 colormap('jet');
 imagesc(normBIC);
 set(gca,'YDir','normal') ;
@@ -76,7 +78,7 @@ v = infer(norm_est_mdl, training);
 % Compute the residuals
 res = training ./ sqrt(v);
 
-figure;
+clf;
 subplot(2,2,1);
 plot(res);
 title('Standardized Residuals');
@@ -114,7 +116,7 @@ end
 
 % Plot heatmap of BIC for each of the GARCH(p,q) models with
 %  student's t distribution
-figure;
+clf;
 colormap('jet');
 imagesc(tBIC);
 set(gca,'YDir','normal') ;
@@ -138,7 +140,7 @@ v = infer(tEstMdl, training);
 % Compute the residuals
 res = training ./ sqrt(v);
 
-figure;
+clf;
 subplot(2,2,1);
 plot(res);
 title('Standardized Residuals');
@@ -185,7 +187,7 @@ simple_ci = z_05 .* sqrt(simple_forecasts);
 % Overlay all the CIs on the same plot
 test_x = 1000 + (1:length(test));
 xl = [min(test_x), max(test_x)];
-figure;
+clf;
 p_d = plot(test_x, test, 'Color', [.7,.7,.7]);
 xlim(xl);
 hold on;
@@ -207,7 +209,8 @@ simple_ci_count = sum(test > -simple_ci & test < simple_ci);
 counts = [norm_ci_count, t_ci_count, simple_ci_count];
 counts(2,:) = round(counts(1,:) / 251, 3);
 % Pretty print the table of counts and percentages
-array2table(counts, 'RowNames', {'Count', '%'} ,'VariableNames', {'Normal', 'T', 'Simple'})
+array2table(counts, 'RowNames', {'Count', '%'}, ...
+    'VariableNames', {'Normal', 'T', 'Simple'})
 
 %% Testing other models
 % GJR(1,1) performs better according to BIC
@@ -229,3 +232,6 @@ fprintf("BIC for GJR model: %.03f\n", gjr_bic);
 % Likelihood ratio test
 % Reject the null hypothesis, and conclude that we need the 
 [h, p] = lratiotest(gjr_logL, norm_logL, 1);
+
+% See
+% http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8914682&fileOId=8914688

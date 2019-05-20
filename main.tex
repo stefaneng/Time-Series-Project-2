@@ -27,6 +27,14 @@ top=1in
 
 \maketitle
 
+\begin{figure}[H]
+  \centering
+\includegraphics[width=10cm]{plots/returns.png}
+\centering
+\caption{Log returns from April 29, 2014 to April 29, 2019}
+\label{fig:returns}
+\end{figure}
+
 \section*{Problem 1}
 
 We computed the log returns $X_t = \log(P_t) - \log(P_{t - 1})$.
@@ -82,10 +90,10 @@ $$
 $$
 and for a GARCH process, $\hat{X}_t = 0$ for all $t \in \mathbb Z$.
 We then plotted the residuals (Figure \ref{fig:residual_plots_norm}), QQ plot of the residuals versus standard normal, autocorrelation of residuals, and the autocorrelation of the squared residuals.
-The residuals were computed by infering $\hat{\sigma_t}^2$, then dividing the training data by the square root of the infered values, $\hat{\sigma}$.
+The residuals were computed by infering $\hat{\sigma_t}^2$, then dividing the training data by the square root of the infered values, $\hat{\sigma_t}$.
 We would expect these values,
 $$
-\frac{X_t}{\hat{\sigma}} = Z_t \sim IID(0,1)
+\frac{X_t}{\hat{\sigma_t}} = Z_t \sim IID(0,1)
 $$
 Thus, the distribution of the residuals should the residuals should follow a standard normal distribution.
 We see that in the QQ plot there is some deviation from the standard normal.
@@ -131,11 +139,11 @@ The model was estimated with degrees of freedom equal to 8.03.
 \end{figure}
 
 \section*{Problem 5}
-The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1})$ when the model has normal error,
-and the distribution is a student's t distribution $t(0, \sigma_{t + 1})$,
+The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1}^2)$ when the model has normal error,
+and the distribution is a student's t distribution $t(0, \sigma_{t + 1}^2)$,
 where we estimate $\sigma_{t + 1}$ using
 $$
-\hat{\sigma}_{t + 1} = \hat{\alpha}_0 + \hat{\alpha}_1 X_t^2 + \hat{\beta}_1 \hat{\sigma}_t
+\hat{\sigma}_{t + 1} = \hat{\alpha}_0 + \hat{\alpha}_1 X_t^2 + \hat{\beta}_1 \hat{\sigma}_t^2
 $$
 This results in confidences intervals
 \begin{align*}
@@ -172,7 +180,7 @@ percentage & 0.996 & 0.996 & 0.98   \\
 
 \section*{GJR Model}
 
-We used a GJR (Glosten, Jagannathan, and Runkle) \cite{gjr1993} model. model which is
+We used a GJR (Glosten, Jagannathan, and Runkle) \cite{gjr1993} model which
 $$
 X_t = \sigma_t Z_t
 $$
@@ -180,17 +188,17 @@ $$
 
 The results for the parameter estimates are show in Table \ref{tab:gjr_summary}.
 
-\begin{table}[]
-\begin{tabular}{l}
-Value       StandardError    TStatistic      PValue                      \\
-Constant       1.9808e-06      8.351e-07         2.372        0.017693   \\
-GARCH\{1\}          0.85556       0.017223        49.676               0 \\
-ARCH\{1\}          0.010588       0.013643       0.77608          0.4377 \\
-Leverage\{1\}       0.25399       0.037509        6.7714      1.2755e-11
-\end{tabular}
-\caption{Summary of GJR(1,1) model}
-\label{tab:gjr_summary}
-\end{table}
+%\begin{table}[H]
+%\begin{tabular}{l}
+%  Value       StandardError    TStatistic      PValue                      \\
+%Constant       1.9808e-06      8.351e-07         2.372        0.017693   \\
+%GARCH\{1\}          0.85556       0.017223        49.676               0 \\
+%ARCH\{1\}          0.010588       0.013643       0.77608          0.4377 \\
+%Leverage\{1\}       0.25399       0.037509        6.7714      1.2755e-11
+%\end{tabular}
+%\caption{Summary of GJR(1,1) model}
+%\label{tab:gjr_summary}
+%\end{table}
 
 \begin{appendices}
 
@@ -199,6 +207,6 @@ Leverage\{1\}       0.25399       0.037509        6.7714      1.2755e-11
 
 \end{appendices}
 
-%\bibliographystyle{plain}
-%\bibliography{references}
+\bibliographystyle{plain}
+\bibliography{references}
 \end{document}
