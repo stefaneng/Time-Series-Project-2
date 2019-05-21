@@ -22,6 +22,7 @@ log_rtns = diff(log_data);
 log_rtns_m = log_rtns - mean(log_rtns);
 
 clf;
+% Plot the mean corrected log returns
 plot(log_rtns_m);
 xlabel("Time");
 ylabel("Log Returns");
@@ -40,6 +41,7 @@ saveas(gcf,'plots/acf_log_rtns.png');
 fprintf("The p-value from the Ljung-box test is: %.04f\n", pValue);
 % Fail to reject null hypothesis that log returns come from IIDN
 clf;
+% PACF plot
 [rtns_pacf,~,~,~] = parcorr(log_rtns_m, 'NumSTD', 1.96);
 saveas(gcf,'plots/pacf_log_rtns.png');
 
@@ -58,6 +60,8 @@ n = length(log_rtns_m);
 training = log_rtns_m(1:1000);
 test = log_rtns_m(1001:end);
 
+% Fit a GARCH(p,q) model for p = 1,...,10 and q = 1,..,10
+% Save the BIC from each model
 normBIC = zeros(10, 10);
 for p = 1:10
     for q = 1:10
@@ -99,11 +103,13 @@ fprintf("Minimum BIC for normal distribution model: %.03f\n", min_bic);
 norm_mdl = garch(1,1);
 [norm_est_mdl, ~, norm_logL] = estimate(norm_mdl, training);
 
+% Infer the conditional variances
 v = infer(norm_est_mdl, training);
 
 % Compute the residuals
 norm_res = training ./ sqrt(v);
 
+% Residual diagnosis plots
 clf;
 subplot(2,2,1);
 plot(norm_res);
@@ -119,20 +125,16 @@ autocorr(norm_res.^2, 'NumSTD', 1.96);
 title('Residual^2 Sample ACF');
 saveas(gcf,'plots/residual_plots_norm.png');
 
+% Check how many of the ACF values fall into the expected bounds
 norm_within_bounds = wnbounds(norm_acf, length(training));
 fprintf("(Normal model) |h| = %d, with %d points outside interval, %.03f\n",...
     length(norm_within_bounds), sum(~ norm_within_bounds),...
     mean(norm_within_bounds))
 
-% If the model is correct the distribution of the residual should be normal
-% What about the covariance structure (is this why we do Residual^2?
-% What does the autocorrelation plot of the residuals look like?
-% What does the autocorrelation plot of the squared residuals look like?
-% What about a qq-plot of the residuals? Are there problems?
-
 %% Problem 4
 % Repeat problem 2 & 3 for GARCH(p,q) with Student's t distribution
 
+% Compute BIC for each of the GARCH(p,q) models with t distributed error
 tBIC = zeros(10, 10);
 for p = 1:10
     for q = 1:10
@@ -141,6 +143,8 @@ for p = 1:10
         % Estimate the model for the training data
         [estMdl, ~, ~] = estimate(mdl, training, 'Display', 'off');        
         results = estMdl.summarize;
+        % Only keep the value if the estimated model has the expected
+        % number of parameters.
         if estMdl.P == p && estMdl.Q == q
             tBIC(p,q) = results.BIC;
         else
@@ -172,6 +176,7 @@ tMdl = garch('GARCHLags', t_min_p,'ARCHLags', t_min_q, 'Distribution', 't');
 tEstMdl = estimate(tMdl, training); 
 
 v = infer(tEstMdl, training);
+
 % Compute the residuals
 t_res = training ./ sqrt(v);
 
@@ -275,10 +280,11 @@ for p = 1:10
     end
 end
 
-% Set NAN values to grey
 clf;
+% Set NAN values to grey
 mycolormap = [ [.95 .95 .95]; jet(30)];
 colormap(mycolormap);
+% Heatmap for GJR BIC
 imagesc(gjrBIC);
 set(gca,'YDir','normal') ;
 colorbar;
@@ -307,3 +313,13 @@ array2table([min_bic, min_bic_t, gjr_bic, min_bic_gjr],...
 % Likelihood ratio test
 % Reject the null hypothesis, and conclude that we need the 
 [h, p] = lratiotest(gjr_logL, norm_logL, 3);
+
+gjr_v = infer(gjr_mdl_est, training);
+
+% Compute the residuals
+gjr_res = training ./ sqrt(gjr_v);
+
+% MSE of the models
+array2table([mean(norm_res.^2), mean(t_res.^2), mean(gjr_res.^2)],...
+    'VariableNames', {'Normal', 'T', 'GJR_1_1'})
+    
