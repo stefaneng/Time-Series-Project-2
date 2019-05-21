@@ -190,11 +190,12 @@ norm_ci = z_05 .* sqrt(norm_forecasts);
 t_ci = t_05 .* sqrt(t_forecasts);
 simple_ci = z_05 .* sqrt(simple_forecasts);
 
+test_x = 1001:1251;
 % Plot CIs as lines
 % Overlay all the CIs on the same plot
 figure;
 p_d = plot(test_x, test, 'Color', [.7,.7,.7]);
-xlim(xl);
+%xlim(xl);
 hold on;
 p_n = plot(test_x, norm_ci, 'r');
 plot(test_x, - norm_ci, 'r');
