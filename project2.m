@@ -3,35 +3,55 @@ n_data = length(data);
 
 log_data = log(data);
 
-plot(log_data);
-title("Standard & Poor's Europe (Log) Returns");
-saveas(gcf,'plots/returns.png');
+figure;
+plot(data);
+xlabel("Time");
+ylabel("Log stock market index");
+title("Standard & Poor's Europe 350 (Log) closing values");
+saveas(gcf,'plots/log_index.png');
+
+% Function that returns whether the acf_vals fall into the expected
+% white noise bounds of +- 1.96/sqrt(n)
+% Expects that h = 0 is acf_vals(1) = 1, so we drop this from the list
+wnbounds = @(acf_vals, n) acf_vals(2:end) > -1.96/sqrt(n) & ...
+    acf_vals(2:end) < 1.96/sqrt(n);
 
 %% Problem 1
 log_rtns = diff(log_data);
 % Mean correct log returns
 log_rtns_m = log_rtns - mean(log_rtns);
 
-% Plot the autocorrelation and partial autocorrelation
 clf;
-% subplot(2,1,1);
-autocorr(log_rtns_m);
+plot(log_rtns_m);
+xlabel("Time");
+ylabel("Log Returns");
+title("Standard & Poor's Europe 350 Log Returns");
+saveas(gcf, 'plots/returns.png');
+
+% Plot the autocorrelation and partial autocorrelation
+% Matlab by default uses 2 / sqrt(n) as bounds, but in the notes we used
+% 1.96 / sqrt(n) so 'NumSTD' parameter is set equal to norminv(.975) = 1.96
+clf;
+[rtns_acf,~,~,~] = autocorr(log_rtns_m, 'NumSTD', 1.96);
 saveas(gcf,'plots/acf_log_rtns.png');
-% subplot(2,1,2);
 
 % Ljung-box test
 [~, pValue] = lbqtest(log_rtns_m, 'lags', 20);
 fprintf("The p-value from the Ljung-box test is: %.04f\n", pValue);
 % Fail to reject null hypothesis that log returns come from IIDN
 clf;
-parcorr(log_rtns_m);
+[rtns_pacf,~,~,~] = parcorr(log_rtns_m, 'NumSTD', 1.96);
 saveas(gcf,'plots/pacf_log_rtns.png');
 
 % Plot the autocorrelation of the squared returns
 clf;
-autocorr(log_rtns_m.^2);
+[rtns_acf2,~,~,~] = autocorr(log_rtns_m.^2, 'NumSTD', 1.96);
 title("Sample Squared Returns Autocorrelation");
 saveas(gcf, 'plots/acf_square_rtns.png');
+
+fprintf("Percentage in bounds ACF: %.03f PACF: %.03f ACF^2: %.03f\n", ...
+    mean(wnbounds(rtns_acf, n_data)), mean(wnbounds(rtns_pacf, n_data)), ...
+    mean(wnbounds(rtns_acf2, n_data)))
 
 %% Problem 2
 n = length(log_rtns_m);
@@ -39,7 +59,6 @@ training = log_rtns_m(1:1000);
 test = log_rtns_m(1001:end);
 
 normBIC = zeros(10, 10);
-
 for p = 1:10
     for q = 1:10
         % Create the GARCH(p,q) model without an offset
@@ -47,7 +66,14 @@ for p = 1:10
         % Estimate the model for the training data
         [estMdl, ~, ~] = estimate(mdl, training, 'Display', 'off');        
         results = estMdl.summarize;
-        normBIC(p,q) = results.BIC;
+        if estMdl.P == p && estMdl.Q == q
+            normBIC(p,q) = results.BIC;
+        else
+            % Estimated model had less params than expected
+            % Exclude it from BIC calculations
+            normBIC(p,q) = nan;
+        end
+        
     end
 end
 
@@ -76,22 +102,27 @@ norm_mdl = garch(1,1);
 v = infer(norm_est_mdl, training);
 
 % Compute the residuals
-res = training ./ sqrt(v);
+norm_res = training ./ sqrt(v);
 
 clf;
 subplot(2,2,1);
-plot(res);
+plot(norm_res);
 title('Standardized Residuals');
 subplot(2,2,2);
-qqplot(res);
+qqplot(norm_res);
 title({'QQ Plot of Residuals vs','Standard Normal Distribution'});
 subplot(2,2,3);
-autocorr(res);
+[norm_acf,~,~,~] = autocorr(norm_res, 'NumSTD', 1.96);
 title('Residual Sample ACF');
 subplot(2,2,4);
-autocorr(res.^2);
+autocorr(norm_res.^2, 'NumSTD', 1.96);
 title('Residual^2 Sample ACF');
 saveas(gcf,'plots/residual_plots_norm.png');
+
+norm_within_bounds = wnbounds(norm_acf, length(training));
+fprintf("(Normal model) |h| = %d, with %d points outside interval, %.03f\n",...
+    length(norm_within_bounds), sum(~ norm_within_bounds),...
+    mean(norm_within_bounds))
 
 % If the model is correct the distribution of the residual should be normal
 % What about the covariance structure (is this why we do Residual^2?
@@ -110,7 +141,11 @@ for p = 1:10
         % Estimate the model for the training data
         [estMdl, ~, ~] = estimate(mdl, training, 'Display', 'off');        
         results = estMdl.summarize;
-        tBIC(p,q) = results.BIC;
+        if estMdl.P == p && estMdl.Q == q
+            tBIC(p,q) = results.BIC;
+        else
+            tBIC(p,q) = nan;
+        end
     end
 end
 
@@ -138,27 +173,32 @@ tEstMdl = estimate(tMdl, training);
 
 v = infer(tEstMdl, training);
 % Compute the residuals
-res = training ./ sqrt(v);
+t_res = training ./ sqrt(v);
 
 clf;
 subplot(2,2,1);
-plot(res);
+plot(t_res);
 title('Standardized Residuals');
 subplot(2,2,2);
 % QQ-plot for t distribution with the estimated degrees of freedom
 tdist = makedist('tLocationScale', 'nu', tEstMdl.Distribution.DoF);
-qqplot(res, tdist);
-title({'QQ Plot of Residuals vs',"Student's t Distribution", "(df = " + round(tEstMdl.Distribution.DoF, 2) + ")"});
+qqplot(t_res, tdist);
+title({'QQ Plot of Residuals vs',"Student's t Distribution",...
+    "(df = " + round(tEstMdl.Distribution.DoF, 2) + ")"});
 xlabel("Quantiles of t distribution");
 subplot(2,2,3);
-autocorr(res);
+[t_acf,~,~,~] = autocorr(t_res, 'NumSTD', 1.96);
 title('Residual Sample ACF');
 subplot(2,2,4);
-autocorr(res.^2);
+autocorr(t_res.^2, 'NumSTD', 1.96);
 title('Residual^2 Sample ACF');
 saveas(gcf,'plots/residual_plots_t.png');
 
+% Show how many ACF values fall into the expected bounds
+t_within_bounds = wnbounds(t_acf, length(training));
 
+fprintf("(T model) |h| = %d, with %d points outside interval, %.03f\n",...
+    length(t_within_bounds), sum(~ t_within_bounds), mean(t_within_bounds))
 
 %% Problem 5
 % Compute the inverse cdf values for norm and t-distribution using
@@ -216,22 +256,54 @@ array2table(counts, 'RowNames', {'Count', '%'}, ...
 % GJR(1,1) performs better according to BIC
 % https://se.mathworks.com/help/econ/specify-gjr-models-using-gjr.html
 % https://se.mathworks.com/help/econ/compare-garch-and-egarch-fits.html
-% Can do a likelihood ratio test: The GARCH(1,1) is nested in the GJR(1,1) model, however, so you could use a likelihood ratio test to compare these models.
+% Can do a likelihood ratio test: The GARCH(1,1) is nested in the GJR(1,1) 
+% model, however, so you could use a likelihood ratio test to compare these models.
 % Found that having error with normal distribution performs better than
 % t-distribution for GJR model
-gjr_mdl = gjr(1,1);
+% Other Ref: http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8914682&fileOId=8914688
+gjrBIC = zeros(10, 10);
+for p = 1:10
+    for q = 1:10
+        gjr_mdl = gjr(p,q);
+        [gjr_mdl_est, ~, ~] = estimate(gjr_mdl, training, 'Display', 'off');
+        results = gjr_mdl_est.summarize;
+        if gjr_mdl_est.P == p && gjr_mdl_est.Q == q
+            gjrBIC(p,q) = results.BIC;
+        else
+            gjrBIC(p,q) = nan;
+        end
+    end
+end
+
+% Set NAN values to grey
+clf;
+mycolormap = [ [.95 .95 .95]; jet(30)];
+colormap(mycolormap);
+imagesc(gjrBIC);
+set(gca,'YDir','normal') ;
+colorbar;
+xlabel('P');
+ylabel('Q');
+title('Heatmap of BIC for GJR(p,q) models');
+
+[min_bic_gjr, min_bic_idx_gjr] = min(gjrBIC, [], 'all', 'linear');
+[gjr_min_p, gjr_min_q] = ind2sub([10,10], min_bic_idx_gjr);
+fprintf("Minimum BIC for GJR model: %.03f. P = %d, Q = %d\n", ...
+    min_bic_gjr, gjr_min_p, gjr_min_q);
+
+gjr_mdl = gjr(1, 1);
 [gjr_mdl_est, gjr_estParam, gjr_logL] = estimate(gjr_mdl, training);
 gjr_results = gjr_mdl_est.summarize;
 gjr_bic = gjr_results.BIC;
 % Get the min p and q
-fprintf("BIC for GJR model: %.03f\n", gjr_bic);
+fprintf("BIC for GJR(1,1) model: %.03f\n", gjr_bic);
+
+array2table([min_bic, min_bic_t, gjr_bic, min_bic_gjr],...
+    'VariableNames', {'Normal', 'T', 'GJR_1_1', 'GJR_5_3'})
 
 % Can compare the normal GARCH model and GJR model because they are nested
 % Norm model
 
 % Likelihood ratio test
 % Reject the null hypothesis, and conclude that we need the 
-[h, p] = lratiotest(gjr_logL, norm_logL, 1);
-
-% See
-% http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8914682&fileOId=8914688
+[h, p] = lratiotest(gjr_logL, norm_logL, 3);
