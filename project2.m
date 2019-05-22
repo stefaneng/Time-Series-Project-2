@@ -7,7 +7,7 @@ figure;
 plot(data);
 xlabel("Time");
 ylabel("Stock market index");
-title("Standard & Poor's Europe 350 (Log) closing values");
+title("Standard & Poor's Europe 350 closing values");
 saveas(gcf,'plots/log_index.png');
 
 % Function that returns whether the acf_vals fall into the expected
@@ -181,7 +181,6 @@ v = infer(tEstMdl, training);
 t_res = training ./ sqrt(v);
 
 clf;
-%123
 subplot(2,2,1);
 plot(t_res);
 title('Standardized Residuals');
