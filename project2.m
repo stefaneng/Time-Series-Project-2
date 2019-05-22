@@ -6,7 +6,7 @@ log_data = log(data);
 figure;
 plot(data);
 xlabel("Time");
-ylabel("Log stock market index");
+ylabel("Stock market index");
 title("Standard & Poor's Europe 350 (Log) closing values");
 saveas(gcf,'plots/log_index.png');
 
@@ -181,6 +181,7 @@ v = infer(tEstMdl, training);
 t_res = training ./ sqrt(v);
 
 clf;
+%123
 subplot(2,2,1);
 plot(t_res);
 title('Standardized Residuals');
@@ -228,7 +229,7 @@ norm_ci = z_05 .* sqrt(norm_forecasts);
 t_ci = t_05 .* sqrt(t_forecasts);
 simple_ci = z_05 .* sqrt(simple_forecasts);
 
-test_x = 1001:1251;
+
 % Plot CIs as lines
 % Overlay all the CIs on the same plot
 test_x = 1000 + (1:length(test));
