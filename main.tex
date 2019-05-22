@@ -33,7 +33,7 @@ top=1in
   \centering
 \includegraphics[width=10cm]{plots/log_index.png}
 \centering
-\caption{Log stock market index values from April 29, 2014 to April 29, 2019}
+\caption{Stock market index values from April 29, 2014 to April 29, 2019}
 \label{fig:log_index}
 \end{figure}
 
@@ -61,7 +61,7 @@ H_0&: X \sim IID(\mu, \sigma^2)\\
 H_a& X \not \sim IID(\mu, \sigma^2)
 \end{align*}
 Using Matlab's Ljung-Box test \textit{lbqtest} with a lag $h = 20$, we got a p-value of 0.1331.
-We fail to reject the null hypothesis at the $\alpha = 0.05$ significance level and conclude that the data in consistent with being $iid$.
+We fail to reject the null hypothesis at the $\alpha = 0.05$ significance level and conclude that the data is consistent with being $iid$.
 
 In Figure \ref{fig:acf_square_rtns} we plot the ACF of the squared returns.
 Why is this important to look at?
@@ -117,9 +117,9 @@ X_t &= \sigma_t Z_t && Z_t \sim IIDN(0, 1)\\
 
 Using the GARCH(1,1) model, we computed the residuals:
 $$
-\hat{R}_t = (X_t - \hat{X_t})/\sqrt{\sigma_t}
+\hat{R}_t = (X_t - \hat{X_t})/\sqrt{\hat{\sigma_t}}
 $$
-and for a GARCH process, $\hat{X}_t = 0$ for all $t \in \mathbb Z$.
+for a GARCH process, $\hat{X}_t = 0$ for all $t \in \mathbb Z$.
 We then plotted the residuals (Figure \ref{fig:residual_plots_norm}), QQ plot of the residuals versus standard normal, autocorrelation of residuals, and the autocorrelation of the squared residuals.
 The residuals were computed by infering $\hat{\sigma_t}^2$, then dividing the training data by the square root of the infered values, $\hat{\sigma_t}$.
 We would expect that if the residuals are iid random variables, then the autocorrelations $\hat{\rho}(h), 1,2,\ldots$ for sufficiently large $n$ will be approximately iid and have a normal distribution with $n^{-1}$ variance (from the lecture notes).
