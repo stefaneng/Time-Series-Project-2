@@ -168,8 +168,10 @@ The model was estimated with degrees of freedom equal to 8.03.
 \end{figure}
 
 \section*{Problem 5}
-The distribution of $X_{t + 1}$ is $N(0, \sigma_{t+1}^2)$ when the model has normal error,
-and the distribution is a student's t distribution $t(0, \sigma_{t + 1}^2)$,
+The distribution of $X_{t + 1} | X_t, \ldots, X_1$ is $N(0, \sigma_{t+1}^2)$ when the model has normal error because  $Z_{t + 1}$ has a normal distribution and we can treat $\sigma_{t + 1}$ as a constant. $E[\sigma_{t + 1} | X_t, \ldots, X_1] = \sigma_{t + 1}$ because we are given all the information needed to compute in $X_t, \ldots, X_1$.
+The mean of the new normal is zero because $E[X_{t + 1} | X_t, \ldots, X_1] = E[\sigma_{t + 1} Z_{t + 1} | X_t, \ldots, X_1] = \sigma_{t + 1} E[Z_{t + 1} | X_t, \ldots, X_1] = 0$.
+Also, the variance is $\Var[X_{t + 1} | X_t, \ldots, X_1] = E[X_{t + 1}^2 | X_t, \ldots, X_1] = E[\sigma_{t + 1}^2 Z_{t + 1}^2 | X_t, \ldots, X_1] = \sigma_{t + 1}^2 E[Z_{t + 1}^2 | X_t, \ldots, X_1] = \sigma_{t + 1}^2$ because $E[Z_{t + 1}^2 | X_t, \ldots, X_1] = \Var[Z_{t + 1}] = 1$.
+Similarly, the distribution is a student's t distribution $t(0, \sigma_{t + 1}^2)$,
 where we estimate $\sigma_{t + 1}$ using
 $$
 \hat{\sigma}_{t + 1} = \hat{\alpha}_0 + \hat{\alpha}_1 X_t^2 + \hat{\beta}_1 \hat{\sigma}_t^2
